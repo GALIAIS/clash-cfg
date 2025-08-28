@@ -1,0 +1,194 @@
+### 全局配置
+mixed-port: 7897
+allow-lan: true
+mode: rule
+log-level: warning
+ipv6: false
+find-process-mode: strict
+profile:
+  store-selected: true
+  store-fake-ip: true
+unified-delay: true
+tcp-concurrent: true
+global-client-fingerprint: chrome
+
+### DNS配置
+dns:
+    enable: true
+    listen: 0.0.0.0:53
+    ipv6: false
+    prefer-h3: true
+    enhanced-mode: fake-ip
+    use-hosts: true
+    use-system-hosts: true
+    nameserver:
+        - https://223.5.5.5/dns-query
+        - https://dns.pub/dns-query
+    fake-ip-range: 198.18.0.1/16
+    fake-ip-filter:
+      - "+.Mijia Cloud"
+      - "+.dlg.io.mi.com"
+
+### 域名嗅探
+sniffer:
+    enable: true
+    sniff:
+        HTTP:
+            ports: [80, 8080-8880]
+            override-destination: true
+        TLS:
+            ports: [443, 8443]
+        QUIC:
+            ports: [443, 8443]
+    skip-domain:
+        - "Mijia Cloud"
+        - dlg.io.mi.com
+        - "+.push.apple.com"
+
+# --- 策略组 ---
+# 根据您的 `custom_proxy_group` 定义生成
+proxy-groups:
+  # --- Part 3: 节点组 ---
+  - name: 🌏 全球自动
+    type: url-test
+    url: http://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 50
+    # 使用 filter 筛选国外节点
+    filter: '^(?!.*(CN|China|中国|大陆|陸|上海|北京|深圳|广州|杭州|成都|移动|联通|电信|广移|广联|广电|沪|京|粤|苏|浙|川|🇨🇳|DIRECT|REJECT)).*$'
+  - name: 🌏 全球手动
+    type: select
+    # 使用 filter 筛选国外节点
+    filter: '^(?!.*(CN|China|中国|大陆|陸|上海|北京|深圳|广州|杭州|成都|移动|联通|电信|广移|广联|广电|沪|京|粤|苏|浙|川|🇨🇳|DIRECT|REJECT)).*$'
+  - name: 🇨🇳 国内手动
+    type: select
+    # 使用 filter 筛选国内节点
+    filter: '(CN|China|中国|大陆|陸|上海|北京|深圳|广州|杭州|成都|移动|联通|电信|广移|广联|广电|沪|京|粤|苏|浙|川|🇨🇳)'
+
+  # --- Part 1: 核心策略组 ---
+  - name: 🌍 国外策略
+    type: select
+    proxies:
+      - 🌏 全球自动
+      - 🌏 全球手动
+      - DIRECT
+  - name: ➡️ 国内策略
+    type: select
+    proxies:
+      - DIRECT
+      - 🇨🇳 国内手动
+  - name: 🛑 广告拦截
+    type: select
+    proxies:
+      - REJECT
+      - DIRECT
+  - name: 🐟 漏网之鱼
+    type: select
+    proxies:
+      - 🌍 国外策略
+      - ➡️ 国内策略
+
+  # --- Part 2: 应用策略组 ---
+  # [国外服务]
+  - {name: ✨ AI, type: select, proxies: [🌍 国外策略, ➡️ 国内策略]}
+  - {name: ✨ AI2, type: select, proxies: [🌍 国外策略, ➡️ 国内策略]}
+  - {name: 👯‍♂️ TikTok, type: select, proxies: [🌍 国外策略]}
+  - {name: 🙋 Telegram, type: select, proxies: [🌍 国外策略]}
+  - {name: 🕊️ Twitter(X), type: select, proxies: [🌍 国外策略]}
+  - {name: 🗣️ Facebook, type: select, proxies: [🌍 国外策略]}
+  - {name: 🎞️ YouTube, type: select, proxies: [🌍 国外策略]}
+  - {name: 📺 Disney, type: select, proxies: [🌍 国外策略]}
+  - {name: 🎥 Netflix, type: select, proxies: [🌍 国外策略]}
+  - {name: 🎬 HBO, type: select, proxies: [🌍 国外策略]}
+  - {name: 🎵 Spotify, type: select, proxies: [🌍 国外策略]}
+  - {name: 🌍 国外, type: select, proxies: [🌍 国外策略]}
+
+  # [可能需要直连的服务]
+  - {name: 📘 GitHub, type: select, proxies: [➡️ 国内策略, 🌍 国外策略]}
+  - {name: 🌳 Amazon, type: select, proxies: [➡️ 国内策略, 🌍 国外策略]}
+  - {name: 🍎 Apple, type: select, proxies: [➡️ 国内策略, 🌍 国外策略]}
+  - {name: Ⓜ️ Microsoft, type: select, proxies: [➡️ 国内策略, 🌍 国外策略]}
+  - {name: 🇬🇴 Google, type: select, proxies: [➡️ 国内策略, 🌍 国外策略]}
+  - {name: 🎮 Steam, type: select, proxies: [➡️ 国内策略, 🌍 国外策略]}
+  - {name: 🕹️ Game (Epic), type: select, proxies: [➡️ 国内策略, 🌍 国外策略]}
+  - {name: 🕹️ Game (EA), type: select, proxies: [➡️ 国内策略, 🌍 国外策略]}
+  - {name: 🕹️ Game (Blizzard), type: select, proxies: [➡️ 国内策略, 🌍 国外策略]}
+  - {name: 🕹️ Game (UBI), type: select, proxies: [➡️ 国内策略, 🌍 国外策略]}
+  - {name: 🕹️ Game (Sony), type: select, proxies: [➡️ 国内策略, 🌍 国外策略]}
+  - {name: 🕹️ Game (Nintendo), type: select, proxies: [➡️ 国内策略, 🌍 国外策略]}
+
+  # [国内、广告与特殊规则]
+  - {name: ➡️ 国内, type: select, proxies: [➡️ 国内策略]}
+  - {name: 🛑 广告, type: select, proxies: [🛑 广告拦截]}
+  - {name: 🔒 隐私, type: select, proxies: [🛑 广告拦截]}
+  - {name: 🚫 恶意, type: select, proxies: [🛑 广告拦截]}
+  - {name: 🎯 全球直连, type: select, proxies: [➡️ 国内策略, 🌍 国外策略]}
+
+# --- 规则集 ---
+# 根据您的 `ruleset` 定义生成
+rule-providers:
+  ✨ AI: {type: http, behavior: domain, url: "https://raw.githubusercontent.com/liandu2024/clash/refs/heads/main/list/AI.list", path: ./ruleset/AI.yaml, interval: 86400}
+  ✨ AI2: {type: http, behavior: domain, url: "https://raw.githubusercontent.com/liandu2024/clash/refs/heads/main/list/AI2.list", path: ./ruleset/AI2.yaml, interval: 86400}
+  📘 GitHub: {type: http, behavior: domain, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/GitHub/GitHub.list", path: ./ruleset/GitHub.yaml, interval: 86400}
+  👯‍♂️ TikTok: {type: http, behavior: domain, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/TikTok/TikTok.list", path: ./ruleset/TikTok.yaml, interval: 86400}
+  🙋 Telegram: {type: http, behavior: domain, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Telegram/Telegram.list", path: ./ruleset/Telegram.yaml, interval: 86400}
+  🕊️ Twitter(X): {type: http, behavior: domain, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Twitter/Twitter.list", path: ./ruleset/Twitter.yaml, interval: 86400}
+  🗣️ Facebook: {type: http, behavior: domain, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Facebook/Facebook.list", path: ./ruleset/Facebook.yaml, interval: 86400}
+  🌳 Amazon: {type: http, behavior: domain, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Amazon/Amazon.list", path: ./ruleset/Amazon.yaml, interval: 86400}
+  🍎 Apple: {type: http, behavior: domain, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Apple/Apple.list", path: ./ruleset/Apple.yaml, interval: 86400}
+  Ⓜ️ Microsoft: {type: http, behavior: domain, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Microsoft/Microsoft.list", path: ./ruleset/Microsoft.yaml, interval: 86400}
+  🎮 Steam: {type: http, behavior: domain, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Steam/Steam.list", path: ./ruleset/Steam.yaml, interval: 86400}
+  🕹️ Game (Epic): {type: http, behavior: domain, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Epic/Epic.list", path: ./ruleset/Game_Epic.yaml, interval: 86400}
+  🕹️ Game (EA): {type: http, behavior: domain, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/EA/EA.list", path: ./ruleset/Game_EA.yaml, interval: 86400}
+  🕹️ Game (Blizzard): {type: http, behavior: domain, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Blizzard/Blizzard.list", path: ./ruleset/Game_Blizzard.yaml, interval: 86400}
+  🕹️ Game (UBI): {type: http, behavior: domain, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/UBI/UBI.list", path: ./ruleset/Game_UBI.yaml, interval: 86400}
+  🕹️ Game (Sony): {type: http, behavior: domain, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Sony/Sony.list", path: ./ruleset/Game_Sony.yaml, interval: 86400}
+  🕹️ Game (Nintendo): {type: http, behavior: domain, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Nintendo/Nintendo.list", path: ./ruleset/Game_Nintendo.yaml, interval: 86400}
+  🎞️ YouTube: {type: http, behavior: domain, url: "https://raw.githubusercontent.com/liandu2024/clash/refs/heads/main/list/YouTube.list", path: ./ruleset/YouTube.yaml, interval: 86400}
+  📺 Disney: {type: http, behavior: domain, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Disney/Disney.list", path: ./ruleset/Disney.yaml, interval: 86400}
+  🎥 Netflix: {type: http, behavior: domain, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Netflix/Netflix.list", path: ./ruleset/Netflix.yaml, interval: 86400}
+  🎬 HBO: {type: http, behavior: domain, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/HBO/HBO.list", path: ./ruleset/HBO.yaml, interval: 86400}
+  🎵 Spotify: {type: http, behavior: domain, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Spotify/Spotify.list", path: ./ruleset/Spotify.yaml, interval: 86400}
+  🇬🇴 Google: {type: http, behavior: domain, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Google/Google.list", path: ./ruleset/Google.yaml, interval: 86400}
+  🌍 国外: {type: http, behavior: domain, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Global/Global.list", path: ./ruleset/Global.yaml, interval: 86400}
+  ➡️ 国内: {type: http, behavior: domain, format: mrs, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/cn.mrs", path: ./ruleset/cn.mrs, interval: 86400}
+  🛑 广告 (广告域名): {type: http, behavior: domain, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Advertising/Advertising_Domain.list", path: ./ruleset/Advertising_Domain.yaml, interval: 86400}
+  🛑 广告 (AdGuard基础): {type: http, behavior: classical, url: "https://raw.githubusercontent.com/AdguardTeam/FiltersRegistry/master/filters/filter_2_Base/filter.txt", path: ./ruleset/AdGuard_Base.yaml, interval: 86400}
+  🔒 隐私 (隐私与追踪): {type: http, behavior: classical, url: "https://raw.githubusercontent.com/AdguardTeam/FiltersRegistry/master/filters/filter_3_Spyware/filter.txt", path: ./ruleset/AdGuard_Spyware.yaml, interval: 86400}
+  🚫 恶意 (恶意与钓鱼): {type: http, behavior: classical, url: "https://raw.githubusercontent.com/AdguardTeam/FiltersRegistry/master/filters/filter_4_PhishingMalware/filter.txt", path: ./ruleset/AdGuard_Phishing.yaml, interval: 86400}
+
+# --- 分流规则 ---
+rules:
+  - RULE-SET,✨ AI,✨ AI
+  - RULE-SET,✨ AI2,✨ AI2
+  - RULE-SET,📘 GitHub,📘 GitHub
+  - RULE-SET,👯‍♂️ TikTok,👯‍♂️ TikTok
+  - RULE-SET,🙋 Telegram,🙋 Telegram
+  - RULE-SET,🕊️ Twitter(X),🕊️ Twitter(X)
+  - RULE-SET,🗣️ Facebook,🗣️ Facebook
+  - RULE-SET,🌳 Amazon,🌳 Amazon
+  - RULE-SET,🍎 Apple,🍎 Apple
+  - RULE-SET,Ⓜ️ Microsoft,Ⓜ️ Microsoft
+  - RULE-SET,🎮 Steam,🎮 Steam
+  - RULE-SET,🕹️ Game (Epic),🕹️ Game (Epic)
+  - RULE-SET,🕹️ Game (EA),🕹️ Game (EA)
+  - RULE-SET,🕹️ Game (Blizzard),🕹️ Game (Blizzard)
+  - RULE-SET,🕹️ Game (UBI),🕹️ Game (UBI)
+  - RULE-SET,🕹️ Game (Sony),🕹️ Game (Sony)
+  - RULE-SET,🕹️ Game (Nintendo),🕹️ Game (Nintendo)
+  - RULE-SET,🎞️ YouTube,🎞️ YouTube
+  - RULE-SET,📺 Disney,📺 Disney
+  - RULE-SET,🎥 Netflix,🎥 Netflix
+  - RULE-SET,🎬 HBO,🎬 HBO
+  - RULE-SET,🎵 Spotify,🎵 Spotify
+  - RULE-SET,🇬🇴 Google,🇬🇴 Google
+  - RULE-SET,🌍 国外,🌍 国外
+  - RULE-SET,➡️ 国内,➡️ 国内
+  - RULE-SET,🛑 广告 (广告域名),🛑 广告
+  - RULE-SET,🛑 广告 (AdGuard基础),🛑 广告
+  - RULE-SET,🔒 隐私 (隐私与追踪),🔒 隐私
+  - RULE-SET,🚫 恶意 (恶意与钓鱼),🚫 恶意
+  # 对应 `ruleset=🎯 全球直连,[]GEOIP,CN`
+  - GEOIP,CN,🎯 全球直连
+  # 对应 `ruleset=🐟 漏网之鱼,[]FINAL`
+  - MATCH,🐟 漏网之鱼
